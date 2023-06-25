@@ -39,6 +39,7 @@ import java.util.concurrent.Executors;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Scanner;
+import java.util.Comparator;
 
 public class ServidorDeProcesamiento {
   private static final String TASK_ENDPOINT = "/task";
@@ -94,9 +95,9 @@ public class ServidorDeProcesamiento {
   private byte[] calculateResponse(byte[] requestBytes) {
     String bodyString = new String(requestBytes);
     List<String> palabras = obtenerPalabrasDeCadena(bodyString);
-    // File directorio = new File(RUTA_DEL_DIRECTORIO);
-    // List<File> archivos = Arrays.asList(directorio.listFiles());
-    List<File> archivos = Arrays.asList(new File("../LIBROS_TXT/Hitler,_Adolf__1935_._Mi_lucha_[11690].txt"));
+    File directorio = new File(RUTA_DEL_DIRECTORIO);
+    List<File> archivos = Arrays.asList(directorio.listFiles());
+    // List<File> archivos = Arrays.asList(new File("../LIBROS_TXT/Hitler,_Adolf__1935_._Mi_lucha_[11690].txt"));
     
     Map<String, Map<String, Integer>> palabrasContadas = contarPalabrasEnArchivos(palabras, archivos);
 
@@ -106,7 +107,20 @@ public class ServidorDeProcesamiento {
         System.out.print("{" + palabra.getKey() + ":" + palabra.getValue() + "}, ");
     }
     
+    Map<String, Double> tfidfscore = calcularTfIdf(palabrasContadas);
 
+    //ordenamos los archivos por relevancia
+    List<Map.Entry<String, Double>> sortedFiles = sortByValue(tfidfscore);
+
+    StringBuilder resultBuilder = new StringBuilder();
+    for (Map.Entry<String, Double> entry : sortedFiles) {
+      resultBuilder.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+    }
+
+    String result = resultBuilder.toString();
+    System.out.println("Resultado:\n" + result);
+
+    return result.getBytes();
 
     // BigInteger result = BigInteger.ONE;
     //
@@ -116,7 +130,6 @@ public class ServidorDeProcesamiento {
     //
     // System.out.println(String.format("El resultado de la multiplicación es: %s\n", result));
     // return result.toString().getBytes();
-    return requestBytes;
   }
 
   private Map<String, Map<String, Integer>> contarPalabrasEnArchivos(List<String> palabras, List<File> archivos) {
@@ -128,14 +141,14 @@ public class ServidorDeProcesamiento {
       try(Scanner sc = new Scanner(new FileInputStream(file))){
 
         while(sc.hasNext()){
-          String word = sc.next();
-          if(word.indexOf("\\")==-1) {
-            String palabraTexto = obtenerPalabrasDeCadena(word).get(0);
-            System.out.print("\n" + palabraTexto + " | " );
+          String palabraTexto = sc.next();
+          if(palabraTexto.indexOf("\\")==-1) {
+            palabraTexto = eliminarCaracteresCadena(palabraTexto);
+            // System.out.print("\n" + palabraTexto + " | " );
             int indice = palabras.indexOf(palabraTexto);
             if (indice != -1) {
               String palabra = palabras.get(indice);
-              System.out.print("Si");
+              // System.out.print("Si");
               if (hashMap.containsKey(palabra)) {
                 int aux = hashMap.get(palabra);
                 aux++;
@@ -155,11 +168,58 @@ public class ServidorDeProcesamiento {
     return palabrasEnArchivos;
   }
 
+  private Map<String, Double> calcularTfIdf(Map<String, Map<String, Integer>> palabrasContadas) {
+    Map<String, Double> tfIdfScores = new HashMap<>();
+
+    int numDocumentos = palabrasContadas.size();
+
+    for (Map.Entry<String, Map<String, Integer>> archivo : palabrasContadas.entrySet()) {
+      String nombreArchivo = archivo.getKey();
+      Map<String, Integer> palabrasEnArchivo = archivo.getValue();
+
+      for (Map.Entry<String, Integer> palabra : palabrasEnArchivo.entrySet()) {
+        String palabraActual = palabra.getKey();
+        int frecuenciaEnDocumento = palabra.getValue();
+
+        int documentosConPalabra = 0;
+        for (Map<String, Integer> palabrasEnOtroArchivo : palabrasContadas.values()) {
+          if (palabrasEnOtroArchivo.containsKey(palabraActual)) {
+            documentosConPalabra++;
+          }
+        }
+
+        double tf = (double) frecuenciaEnDocumento / palabrasEnArchivo.size();
+        double idf = Math.log((double) numDocumentos / (1 + documentosConPalabra));
+
+        double tfIdf = tf * idf;
+
+        tfIdfScores.put(nombreArchivo, tfIdf);
+      }
+    }
+
+    return tfIdfScores;
+  }
+
+   private List<Map.Entry<String, Double>> sortByValue(Map<String, Double> map) {
+    List<Map.Entry<String, Double>> sortedList = new java.util.ArrayList<>(map.entrySet());
+    sortedList.sort(Comparator.comparing(Map.Entry::getValue));
+    return sortedList;
+  }
+
   private List<String> obtenerPalabrasDeCadena(String cadena) {
     List<String> palabras = Arrays.asList(cadena.split("[\\pP\\s&&[^']]+"));
     for (int i = 0; i < palabras.size(); ++i)
       palabras.set(i, palabras.get(i).toLowerCase());
     return palabras;
+  }
+
+  private String eliminarCaracteresCadena(String cadena) {
+    List<String> palabras = Arrays.asList(cadena.split("[\\pP\\s&&[^']]+"));
+    if (palabras.size() != 0) {
+      return palabras.get(0).toLowerCase();
+    } else {
+      return null;
+    }
   }
 
   private void sendResponse(byte[] responseBytes, HttpExchange exchange) throws IOException {
