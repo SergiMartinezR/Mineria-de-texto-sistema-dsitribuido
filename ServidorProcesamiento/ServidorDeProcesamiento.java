@@ -98,7 +98,6 @@ public class ServidorDeProcesamiento {
     List<String> palabras = obtenerPalabrasDeCadena(bodyString);
     File directorio = new File(RUTA_DEL_DIRECTORIO);
     List<File> archivos = Arrays.asList(directorio.listFiles());
-    // List<File> archivos = Arrays.asList(new File("../LIBROS_TXT/Hitler,_Adolf__1935_._Mi_lucha_[11690].txt"));
     
     Map<String, Map<String, Integer>> palabrasContadas = contarPalabrasEnArchivos(palabras, archivos);
     
