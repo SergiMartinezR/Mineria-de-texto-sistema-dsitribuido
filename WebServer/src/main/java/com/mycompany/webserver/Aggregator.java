@@ -28,37 +28,39 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class Aggregator { //clase Aggregator tiene como unico dato un objeto de tipo webClient
+  private final ObjectMapper objectMapper;
   private WebClient webClient;
 
   public Aggregator() { //el constructor instacia ub objeto webClient
     this.webClient = new WebClient();
+    this.objectMapper = new ObjectMapper();
   }
 
   //Unico metodo de la clase Aggregator es sendTasksToWorkers
   //Este metodo recibe una lista de los trabajadores y la lista de las tareas
-  public List<String> sendTasksToWorkers(List<String> workersAddresses, List<String> tasks) {
+  public List<byte[]> sendTasksToWorkers(List<String> workersAddresses, List<Task> tasks) {
     //comunicacion asincrona de la clase CompletableFuture
     //arreglo futures para almacenar las respuestas futuras de los dos servidores
-    CompletableFuture<String>[] futures = new CompletableFuture[workersAddresses.size()];
+    CompletableFuture<byte[]>[] futures = new CompletableFuture[workersAddresses.size()];
 
     //Itera los elementos de la lista y se obtienen las direcciones de cada uno de los trabajadores asi como cada una de las tareas que estan en la lista
     for (int i = 0; i < workersAddresses.size(); i++) {
       String workerAddress = workersAddresses.get(i);
-      String task = tasks.get(i);
+      Task task = tasks.get(i);
 
       //almacena las tareas en un formato de byte y se envian las tareas asincronas con el metodo sendTask 
-      byte[] requestPayload = task.getBytes();
-      System.out.println("Servidor " + workerAddress + " -> Tarea: " + task);
+      byte[] requestPayload = SerializationUtils.serialize(task);
       futures[i] = webClient.sendTask(workerAddress, requestPayload);
     }
 
     //Declaracion de la lista de resultados 
     //conforme lleguen se van agregando a la lista
-    List<String> results = new ArrayList();
+    List<byte[]> results = new ArrayList();
     for (int i = 0; i < workersAddresses.size(); i++) {
       results.add(futures[i].join());
-      System.out.println(results.get(i));
     }
 
     //Egresa la lista de todas las respuestas asincronas 

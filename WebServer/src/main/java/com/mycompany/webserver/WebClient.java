@@ -42,7 +42,7 @@ public class WebClient { //clase WebCLient
 
   //El metodo sendTask recibe la direccion con la que establecera conexion y los datos a enviar hacia el servidor
   //Devuelve los CompletableFuture en un tipo String
-  public CompletableFuture<String> sendTask(String url, byte[] requestPayload) {
+  public CompletableFuture<byte[]> sendTask(String url, byte[] requestPayload) {
     //crea un objeto HttpRequest este permite construir una solicitud http con el metodo post y la direccion de destino
     HttpRequest request = HttpRequest.newBuilder()
       .POST(HttpRequest.BodyPublishers.ofByteArray(requestPayload))
@@ -50,7 +50,7 @@ public class WebClient { //clase WebCLient
       .build();
 
     //Metodo sendAsync para enviar una solicitud request deuna manera asincrona 
-    return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+    return client.sendAsync(request, HttpResponse.BodyHandlers.ofByteArray())
       .thenApply(HttpResponse::body);
   }
 }

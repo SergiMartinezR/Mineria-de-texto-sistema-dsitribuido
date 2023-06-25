@@ -37,11 +37,11 @@ import java.io.InputStream;
 import java.util.StringTokenizer;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;   
-import com.fasterxml.jackson.databind.ObjectMapper;             
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;   
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class WebServer {
 
@@ -131,23 +131,21 @@ public class WebServer {
     try {
       FrontendSearchRequest frontendSearchRequest = objectMapper.readValue(exchange.getRequestBody().readAllBytes(), FrontendSearchRequest.class); 
       String frase = frontendSearchRequest.getSearchQuery();
-      String[] tasks = divideNumber(NUMERO_DE_ARCHIVOS);
+      String[] intervalos = divideNumber(NUMERO_DE_ARCHIVOS);
+      List<Task> tasks = new ArrayList<Task>(NODE_NUMBERS);
+      for (int i = 0; i < intervalos.length; i++) {
+        int minLim = Integer.parseInt((intervalos[i]).split(",")[0]);
+        int maxLim = Integer.parseInt((intervalos[i]).split(",")[1]);
+        tasks.add(new Task(minLim, maxLim, frase));
+      }
       System.out.println("Los intervalos son:");
-      for (int i = 0; i < tasks.length; i++) {
-        System.out.println("Intervalo " + (i+1) + ": " + tasks[i]);
-        tasks[i] += "," + frase;
+      for (Task task: tasks) {
+        System.out.println("[" + task.obtenerMinLim() + ", " + task.obtenerMaxLim()  + "] : " + task.obtenerFrase());
       }
 
       Aggregator aggregator = new Aggregator();
-      //Las tareas ya se envían bien, con el formato "limiteMinimo,limiteMaximo,fraseQueBuscar" el problema de esta manera de enviarlo, es que
-      //en primera asi no la recibe el servidor de procesamiento. En segunda, si el usuario quiere buscar una frase con ',' el programa valdra chetos
-      //Ejemplo quiera buscar "Hola, como estas?"
-      //Para solucionar esto podriamos utilizar un objeto, serializarlo y enviarlo, para deserializarlo en los servidores. Fuera de eso casi esta completo
-      //Falta obtener las listas (respuestas de los servidores), juntarlas, ordenar dicha lista y mandarla al front.
-      List<String> results = aggregator.sendTasksToWorkers(Arrays.asList(SERVER1, SERVER2, SERVER3), Arrays.asList(tasks));
+      List<byte[]> results = aggregator.sendTasksToWorkers(Arrays.asList(SERVER1, SERVER2, SERVER3), tasks);
       
-      //Había pensado en que se recibirían objetos de tipo List<String>, pero si se te ocurre de otra forma que no suponga serializacion, bienvenida
-      //no le hagas caso a las lineas debajo de esta, aun no funcionan (hasta que el aggregator devuelva la respuesta correcta)
       System.out.println("El resultado de la multiplicación es: " + frase);
       FrontendSearchResponse frontendSearchResponse = new FrontendSearchResponse(frase, frase);
       byte[] responseBytes = objectMapper.writeValueAsBytes(frontendSearchResponse);
