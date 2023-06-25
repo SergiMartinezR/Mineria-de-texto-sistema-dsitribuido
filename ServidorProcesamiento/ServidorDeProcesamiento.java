@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Scanner;
 import java.util.Comparator;
+import java.util.Collections;
 
 public class ServidorDeProcesamiento {
   private static final String TASK_ENDPOINT = "/task";
@@ -100,12 +101,6 @@ public class ServidorDeProcesamiento {
     // List<File> archivos = Arrays.asList(new File("../LIBROS_TXT/Hitler,_Adolf__1935_._Mi_lucha_[11690].txt"));
     
     Map<String, Map<String, Integer>> palabrasContadas = contarPalabrasEnArchivos(palabras, archivos);
-
-    for (Map.Entry<String, Map<String, Integer>> archivo : palabrasContadas.entrySet()) {
-      System.out.print("\nArchivo " + archivo.getKey() + " | ");
-      for (Map.Entry<String, Integer> palabra : archivo.getValue().entrySet())
-        System.out.print("{" + palabra.getKey() + ":" + palabra.getValue() + "}, ");
-    }
     
     Map<String, Double> tfidfscore = calcularTfIdf(palabrasContadas);
 
@@ -121,15 +116,6 @@ public class ServidorDeProcesamiento {
     System.out.println("Resultado:\n" + result);
 
     return result.getBytes();
-
-    // BigInteger result = BigInteger.ONE;
-    //
-    // for (int i = minVal; i <= maxVal; i++) {
-    //   result = result.multiply(BigInteger.valueOf(i));
-    // }
-    //
-    // System.out.println(String.format("El resultado de la multiplicación es: %s\n", result));
-    // return result.toString().getBytes();
   }
 
   private Map<String, Map<String, Integer>> contarPalabrasEnArchivos(List<String> palabras, List<File> archivos) {
@@ -144,11 +130,9 @@ public class ServidorDeProcesamiento {
           String palabraTexto = sc.next();
           if(palabraTexto.indexOf("\\")==-1) {
             palabraTexto = eliminarCaracteresCadena(palabraTexto);
-            // System.out.print("\n" + palabraTexto + " | " );
             int indice = palabras.indexOf(palabraTexto);
             if (indice != -1) {
               String palabra = palabras.get(indice);
-              // System.out.print("Si");
               if (hashMap.containsKey(palabra)) {
                 int aux = hashMap.get(palabra);
                 aux++;
@@ -177,6 +161,8 @@ public class ServidorDeProcesamiento {
       String nombreArchivo = archivo.getKey();
       Map<String, Integer> palabrasEnArchivo = archivo.getValue();
 
+      double tfIdf = 0.0;
+      int palabrasTotalesDocumento = obtenerPalabrasTotalesDocumento(nombreArchivo);
       for (Map.Entry<String, Integer> palabra : palabrasEnArchivo.entrySet()) {
         String palabraActual = palabra.getKey();
         int frecuenciaEnDocumento = palabra.getValue();
@@ -188,13 +174,12 @@ public class ServidorDeProcesamiento {
           }
         }
 
-        double tf = (double) frecuenciaEnDocumento / palabrasEnArchivo.size();
-        double idf = Math.log((double) numDocumentos / (1 + documentosConPalabra));
+        double tf = (double) frecuenciaEnDocumento / (double) palabrasTotalesDocumento;
+        double idf = Math.log10((double) numDocumentos / (double) documentosConPalabra);
 
-        double tfIdf = tf * idf;
-
-        tfIdfScores.put(nombreArchivo, tfIdf);
+        tfIdf += tf * idf;
       }
+      tfIdfScores.put(nombreArchivo, tfIdf);
     }
 
     return tfIdfScores;
@@ -202,8 +187,23 @@ public class ServidorDeProcesamiento {
 
    private List<Map.Entry<String, Double>> sortByValue(Map<String, Double> map) {
     List<Map.Entry<String, Double>> sortedList = new java.util.ArrayList<>(map.entrySet());
-    sortedList.sort(Comparator.comparing(Map.Entry::getValue));
+    Collections.sort(sortedList, (a, b) -> a.getValue() < b.getValue() ? 1 : a.getValue() == b.getValue() ? 0 : -1);
     return sortedList;
+  }
+
+  private int obtenerPalabrasTotalesDocumento(String archivo) {
+    File file = new File(RUTA_DEL_DIRECTORIO + archivo);
+    int noPalabrasDelArchivo = 0;
+    try(Scanner sc = new Scanner(new FileInputStream(file))){
+      while(sc.hasNext()){
+        String palabraTexto = sc.next();
+        if(palabraTexto.indexOf("\\")==-1)
+          noPalabrasDelArchivo++;
+      }
+    } catch (Exception e) {
+      System.out.println("Archivo no encontrado");
+    }
+    return noPalabrasDelArchivo;
   }
 
   private List<String> obtenerPalabrasDeCadena(String cadena) {
