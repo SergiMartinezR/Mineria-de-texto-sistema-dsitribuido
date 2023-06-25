@@ -21,6 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *  SOFTWARE.
  */
+package com.mycompany.webserver;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpContext;
@@ -39,7 +40,6 @@ import java.util.concurrent.Executors;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Scanner;
-import java.util.Comparator;
 import java.util.Collections;
 
 public class ServidorDeProcesamiento {
@@ -94,27 +94,26 @@ public class ServidorDeProcesamiento {
   }
 
   private byte[] calculateResponse(byte[] requestBytes) {
-    String bodyString = new String(requestBytes);
-    List<String> palabras = obtenerPalabrasDeCadena(bodyString);
+    Task task = (Task) SerializationUtils.deserialize(requestBytes);
+    List<String> palabras = obtenerPalabrasDeCadena(task.obtenerFrase());
     File directorio = new File(RUTA_DEL_DIRECTORIO);
-    List<File> archivos = Arrays.asList(directorio.listFiles());
+    int minLim = task.obtenerMinLim() - 1;
+    int maxLim = task.obtenerMaxLim();
+    System.out.println(minLim + ", " + maxLim);
+    List<File> archivos = Arrays.asList(directorio.listFiles()).subList(minLim, maxLim);
     
     Map<String, Map<String, Integer>> palabrasContadas = contarPalabrasEnArchivos(palabras, archivos);
     
     Map<String, Double> tfidfscore = calcularTfIdf(palabrasContadas);
 
-    //ordenamos los archivos por relevancia
-    List<Map.Entry<String, Double>> sortedFiles = sortByValue(tfidfscore);
-
-    StringBuilder resultBuilder = new StringBuilder();
-    for (Map.Entry<String, Double> entry : sortedFiles) {
-      resultBuilder.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+    System.out.println("MI LISTA DE ARCHIVOS EVALUADA");
+    for (Map.Entry<String, Double> archivo: tfidfscore.entrySet()) {
+      System.out.println(archivo.getKey() + ": " + archivo.getValue());
     }
 
-    String result = resultBuilder.toString();
-    System.out.println("Resultado:\n" + result);
+    byte[] archivosConTfIdf = SerializationUtils.serialize(tfidfscore);
 
-    return result.getBytes();
+    return archivosConTfIdf;
   }
 
   private Map<String, Map<String, Integer>> contarPalabrasEnArchivos(List<String> palabras, List<File> archivos) {
@@ -182,12 +181,6 @@ public class ServidorDeProcesamiento {
     }
 
     return tfIdfScores;
-  }
-
-   private List<Map.Entry<String, Double>> sortByValue(Map<String, Double> map) {
-    List<Map.Entry<String, Double>> sortedList = new java.util.ArrayList<>(map.entrySet());
-    Collections.sort(sortedList, (a, b) -> a.getValue() < b.getValue() ? 1 : a.getValue() == b.getValue() ? 0 : -1);
-    return sortedList;
   }
 
   private int obtenerPalabrasTotalesDocumento(String archivo) {
