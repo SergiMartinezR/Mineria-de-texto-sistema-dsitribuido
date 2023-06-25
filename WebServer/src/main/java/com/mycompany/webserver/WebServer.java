@@ -39,6 +39,9 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,7 +85,6 @@ public class WebServer {
   }
 
   private void handleRequestForAsset(HttpExchange exchange) throws IOException {
-    // System.out.println("Metodo " + exchange.getRequestMethod() + " del endpoint /");
     if (!exchange.getRequestMethod().equalsIgnoreCase("get")) {
       exchange.close();
       return;
@@ -91,7 +93,6 @@ public class WebServer {
     byte[] response;
 
     String asset = exchange.getRequestURI().getPath(); 
-    System.out.println(asset);
 
     if (asset.equals(HOME_PAGE_ENDPOINT)) { 
       response = readUiAsset(HOME_PAGE_UI_ASSETS_BASE_DIR + "index.html");
@@ -145,9 +146,25 @@ public class WebServer {
 
       Aggregator aggregator = new Aggregator();
       List<byte[]> results = aggregator.sendTasksToWorkers(Arrays.asList(SERVER1, SERVER2, SERVER3), tasks);
-      
-      System.out.println("El resultado de la multiplicación es: " + frase);
-      FrontendSearchResponse frontendSearchResponse = new FrontendSearchResponse(frase, frase);
+
+      Map<String, Double> archivos = juntarListas(results);
+ 
+      //ordenamos los archivos por relevancia
+      List<Map.Entry<String, Double>> sortedFiles = sortByValue(archivos);
+
+      System.out.println("ARCHIVOS POR ORDEN DE RELEVANCIA");
+      for (Map.Entry<String, Double> entry : sortedFiles) {
+        System.out.println(entry.getKey() + ": " + entry.getValue());
+      }
+
+      StringBuilder resultBuilder = new StringBuilder();
+      for (int i = 0; i < 5; i++) {
+        resultBuilder.append(sortedFiles.get(i).getKey()).append("\n");
+      }
+
+      System.out.println(resultBuilder);
+
+      FrontendSearchResponse frontendSearchResponse = new FrontendSearchResponse(frase, resultBuilder.toString());
       byte[] responseBytes = objectMapper.writeValueAsBytes(frontendSearchResponse);
       sendResponse(responseBytes, exchange);
     } catch (IOException e) {
@@ -178,9 +195,23 @@ public class WebServer {
     return intervalos;
   }
 
+  private Map<String, Double> juntarListas(List<byte[]> resultados) {
+    Map<String, Double> archivos = new HashMap<String, Double>();
+    for (byte[] resultado : resultados) {
+      Map<String, Double> archivo = (Map<String, Double>) SerializationUtils.deserialize(resultado);
+      archivos.putAll(archivo);
+    }
+    return archivos;
+  }
+
+   private List<Map.Entry<String, Double>> sortByValue(Map<String, Double> map) {
+    List<Map.Entry<String, Double>> sortedList = new java.util.ArrayList<>(map.entrySet());
+    Collections.sort(sortedList, (a, b) -> a.getValue() < b.getValue() ? 1 : a.getValue() == b.getValue() ? 0 : -1);
+    return sortedList;
+  }
+
   private void sendResponse(byte[] responseBytes, HttpExchange exchange) throws IOException {
     exchange.sendResponseHeaders(200, responseBytes.length);
-    // System.out.println(responseBytes.length);
     OutputStream outputStream = exchange.getResponseBody();
     outputStream.write(responseBytes);
     outputStream.flush();

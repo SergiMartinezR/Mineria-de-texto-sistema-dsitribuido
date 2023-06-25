@@ -40,10 +40,10 @@ $( document ).ready(function() {
     function addResults(data) {
         resultsTable.empty();
 
-        var cantidad = data.cantidad;
-        var cadena = data.cadena;
+        var frase = data.frase;
+        var coincidencias = data.coincidencias;
         resultsWrapper.show();
-        resultsTable.append("<thead><tr><th>Datos recibidos   </th><th>   Numero de palabras</th></tr></thead><tr><td>" + cadena + "</td><td>" + cantidad + "</td></tr>");
+        resultsTable.append("<thead><tr><th>Frase a buscar   </th><th>   Las 5 mejores coincidencias</th></tr></thead><tr><td>" + frase + "</td><td>" + coincidencias + "</td></tr>");
     }
 });
 
