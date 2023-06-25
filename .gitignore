@@ -25,3 +25,5 @@ replay_pid*
 
 #Ignore dirs
 LIBROS_TXT/
+apache-maven-*
+target/
