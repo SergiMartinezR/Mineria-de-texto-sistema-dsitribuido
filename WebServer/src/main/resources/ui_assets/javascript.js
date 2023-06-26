@@ -1,3 +1,7 @@
+//Martinez Ramirez Sergi Alberto 4CM12
+//Zárate González Erik Daniel 4CM14
+//MÉNDEZ MARTÍNEZ YOSELIN ELIZABETH 4CM13
+
 $( document ).ready(function() {
     console.log( "ready!" );
 
