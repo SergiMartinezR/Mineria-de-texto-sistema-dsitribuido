@@ -40,5 +40,17 @@ button {
 #results table {
   margin-left:auto;
   margin-right:auto;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#results th{
+  background-color: #f2f2f2;
+  font-weight: bold;
+  padding: 10px;
+}
+
+#results td{
+  padding: 10px;
 }
 
