@@ -46,10 +46,8 @@ $( document ).ready(function() {
 
         var frase = data.frase;
         var coincidencias = data.coincidencias;
-        $("#frase").text(frase);
-        $("#coincidencias").text(coincidencias);
-
         resultsWrapper.show();
+        resultsTable.append("<thead><tr><th>Frase a buscar   </th><th>   5 mejores coincidencias</th></tr></thead><tr><td>" + frase + "</td><td>" + coincidencias + "</td></tr>");
     }
 });
 

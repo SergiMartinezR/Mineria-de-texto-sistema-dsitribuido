@@ -49,24 +49,33 @@ import java.util.Collections;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.*;
 
 public class WebServer {
 
   private static final String HOME_PAGE_ENDPOINT = "/";
   private static final String HOME_PAGE_UI_ASSETS_BASE_DIR = "/ui_assets/";
   private static final String ENDPOINT_PROCESS = "/procesar_datos";
-  private static final String SERVER1 = "http://34.125.244.24/task";
-  private static final String SERVER2 = "http://34.125.5.19/task";
-  private static final String SERVER3 = "http://34.125.205.237/task";
+  // private static final String SERVER1 = "http://34.125.244.24/task";
+  // private static final String SERVER2 = "http://34.125.5.19/task";
+  // private static final String SERVER3 = "http://34.125.205.237/task";
+  private static List<String> SERVER_NODES = new ArrayList<String>();
   private static final int NUMERO_DE_ARCHIVOS = 46;
   private int NODE_NUMBERS = 3;
+
+  private static String ZOOKEEPER_ADDRESS = "localhost:2181";
+  private static final int SESSION_TIMEOUT = 3000;
+  private static final String NODO_OBJETIVO = "/servers";
 
   private final int port; 
   private HttpServer server; 
   private final ObjectMapper objectMapper;
+  private ZooKeeper zooKeeper;
 
-  public WebServer(int port) {
+  public WebServer(int port, String zooKeeperAddress) {
     this.port = port;
+    this.ZOOKEEPER_ADDRESS = zooKeeperAddress;
     this.objectMapper = new ObjectMapper();
     this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
@@ -86,6 +95,50 @@ public class WebServer {
 
     server.setExecutor(Executors.newFixedThreadPool(8));
     server.start();
+
+    connectToZooKeeper();
+  }
+
+  private void connectToZooKeeper() {
+    try {
+      System.out.println("ZK: " + ZOOKEEPER_ADDRESS);
+      zooKeeper = new ZooKeeper(ZOOKEEPER_ADDRESS, SESSION_TIMEOUT, null);
+      crearNodoObjetivo();
+    } catch (IOException | KeeperException | InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void crearNodoObjetivo() throws KeeperException, InterruptedException {
+    if (zooKeeper.exists(NODO_OBJETIVO, false) == null) {
+      zooKeeper.create(NODO_OBJETIVO, new byte[]{}, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+    }
+  }
+
+  private void watchTargetNode() {
+    try {
+      List<String> serverNodes = zooKeeper.getChildren(NODO_OBJETIVO, null);
+      System.out.println("Nodos disponibles:\n" + serverNodes);
+      actualizarNodos(serverNodes);
+    } catch (KeeperException | InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void actualizarNodos(List<String> serverNodes) {
+    NODE_NUMBERS = serverNodes.size();
+
+    List<String> auxServerNodes = new ArrayList<String>();
+    for (String nodo : serverNodes) {
+      try {
+        byte[] data = zooKeeper.getData(NODO_OBJETIVO + "/" + nodo, false, null);
+        auxServerNodes.add("http://" + new String(data) + "/task");
+      } catch (KeeperException | InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+    SERVER_NODES = auxServerNodes;
+    System.out.println(SERVER_NODES);
   }
 
   private void handleRequestForAsset(HttpExchange exchange) throws IOException {
@@ -133,6 +186,8 @@ public class WebServer {
       return;
     }
 
+    watchTargetNode();
+
     try {
       FrontendSearchRequest frontendSearchRequest = objectMapper.readValue(exchange.getRequestBody().readAllBytes(), FrontendSearchRequest.class); 
       String frase = frontendSearchRequest.getSearchQuery();
@@ -149,7 +204,8 @@ public class WebServer {
       }
 
       Aggregator aggregator = new Aggregator();
-      List<byte[]> results = aggregator.sendTasksToWorkers(Arrays.asList(SERVER1, SERVER2, SERVER3), tasks);
+      // List<byte[]> results = aggregator.sendTasksToWorkers(Arrays.asList(SERVER1, SERVER2, SERVER3), tasks);
+      List<byte[]> results = aggregator.sendTasksToWorkers(SERVER_NODES, tasks);
 
       Map<String, Double> archivos = juntarListas(results);
 

@@ -46,17 +46,31 @@ import java.io.FileInputStream;
 import java.util.Scanner;
 import java.util.Collections;
 
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.*;
+
 public class ServidorDeProcesamiento {
   private static final String TASK_ENDPOINT = "/task";
   private static final String RUTA_DEL_DIRECTORIO = "LIBROS_TXT/";
 
+  private static final int SESSION_TIMEOUT = 3000;
+  private static final String NODO_OBJETIVO = "/servers";
+  private static String THIS_IP = "localhost";
+  private static String ZOOKEEPER_ADDRESS = "localhost:2181";
+
   private final int port;
   private HttpServer server;
+  private ZooKeeper zooKeeper;
 
   public static void main(String[] args) {
     int serverPort = 8080;
-    if (args.length == 1) {
+    if (args.length == 3) {
       serverPort = Integer.parseInt(args[0]);
+      THIS_IP = args[1];
+      ZOOKEEPER_ADDRESS = args[2];
+    } else {
+      System.out.println("Uso: java -jar ServidorDeProcesamiento puerto IP_de_esta_maquina IP_zookeeper");
+      System.exit(1);
     }
 
     ServidorDeProcesamiento webServer = new ServidorDeProcesamiento(serverPort);
@@ -83,7 +97,27 @@ public class ServidorDeProcesamiento {
 
     server.setExecutor(Executors.newFixedThreadPool(8));
     server.start();
+
+    connectToZooKeeper();
   }
+
+  private void connectToZooKeeper() {
+    try {
+      zooKeeper = new ZooKeeper(ZOOKEEPER_ADDRESS, SESSION_TIMEOUT, null);
+      crearNodoHijo();
+    } catch (IOException | KeeperException | InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void crearNodoHijo() throws KeeperException, InterruptedException {
+    String nodePrefix = NODO_OBJETIVO + "/c_";
+    byte[] datos = THIS_IP.getBytes();
+    String nodeFullPath = zooKeeper.create(nodePrefix, datos, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+
+    System.out.println("Se creó el nodo " + nodeFullPath);
+  }
+
 
   private void handleTaskRequest(HttpExchange exchange) throws IOException {
     if (!exchange.getRequestMethod().equalsIgnoreCase("post")) {
