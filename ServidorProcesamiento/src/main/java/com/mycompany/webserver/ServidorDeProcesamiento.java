@@ -44,7 +44,7 @@ import java.util.Collections;
 
 public class ServidorDeProcesamiento {
   private static final String TASK_ENDPOINT = "/task";
-  private static final String RUTA_DEL_DIRECTORIO = "../LIBROS_TXT/";
+  private static final String RUTA_DEL_DIRECTORIO = "LIBROS_TXT/";
 
   private final int port;
   private HttpServer server;
