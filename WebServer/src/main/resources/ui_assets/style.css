@@ -4,60 +4,128 @@
 //MÉNDEZ MARTÍNEZ YOSELIN ELIZABETH 4CM13
 
 */
-
-body {
-  background: #330000;
-  padding: 10px;
-  font-family: Helvetica;
+*{
+  margin:0;
+  padding:0;
+  -webkit-box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  box-sizing:border-box;
 }
 
-#layout {
-  background: #EEE;
-  border-radius: 4px;
-  padding: 20px 5px 50px;
-  font-size: 25px;
+body{
+  background:#263238;
+  position:relative;
+}
+
+h1 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  color: #03a9f4;
+  font-size: 2em;
   text-align: center;
-  transition: all 0.2s;
-  margin: 0 auto;
-  width: 600px;
-}
-
-input {
-  height: 25px;
-}
-
-#search_text {
-  width: 500px;
-}
-
-button {
-  background: #0084ff;
-  border: none;
-  border-radius: 5px;
-  padding: 8px 14px;
-  font-size: 15px;
-  color: #fff;
-}
-
-#results {
-  display: none;
-  white-space: pre-wrap;
-}
-
-#results table {
-  margin-left:auto;
-  margin-right:auto;
-  border-collapse: collapse;
   width: 100%;
 }
 
-#results th{
-  background-color: #f2f2f2;
-  font-weight: bold;
-  padding: 10px;
+.input-title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  color: #fff;
+  font-size: 2em;
+  text-align: center;
+  width: 100%;
 }
 
-#results td{
-  padding: 10px;
+.close{
+  position:absolute;
+  color:#fff;
+  top:20px;
+  right:50px;
+  font-size:1.7em;
+  cursor:pointer;
+  display:none;
+  z-index:999;
+  -webkit-transform:rotate(0deg);
+  transform:rotate(0deg);
+  -webkit-transition: all 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition:         all 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55); 
 }
 
+.close:hover{
+  font-size:2.4em;
+  -webkit-transform:rotate(360deg);
+  transform:rotate(360deg);
+}
+/*-------------- saerch section -----------*/
+.search{
+  position:fixed;
+  top:50%;
+  left:50%;
+  -webkit-transform:translate(-50%, -50%);
+  transform:translate(-50%, -50%);
+  border-radius:1000px;
+  width:0;
+  height:0;
+  background:#03a9f4;
+  -webkit-transition: all .4s linear;
+  transition:  all .4s linear;
+}
+
+.search i{
+  color:#03a9f4;
+  font-size:1.7em;
+  cursor:pointer;
+}
+
+.search .input{
+  position:absolute;
+  top:50%;
+  left:50%;
+  -webkit-transform:translate(-50%, -50%);
+  transform:translate(-50%, -50%);
+  width:350px;
+  height:40px;
+  background:transparent;
+  border:none;
+  outline:none;
+  border-bottom:3px solid #eee;
+  color:#eee;
+  font-size:1.3em;
+  display:none;
+}
+
+
+.search.open{
+  height:350%;
+  width:350%;
+}
+
+.list-div {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 70%);
+  background: #03a9f4;
+  padding: 40px;
+  width: 100%;
+  border-radius: 10px;
+  font-size: 2em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.list-title {
+  font-size: 1em;
+  position: relative;
+  top: 0%;
+  text-align: center;
+}
+
+.frase-class {
+  font-size: 1em;
+  position: relative;
+  padding-top: 5%;
+  top: 0%;
+}
