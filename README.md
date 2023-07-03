@@ -1,4 +1,4 @@
-# Mineria-de-texto-sistema-dsitribuido
+# Mineria de Texto con un Sistema Sistribuido
 
 Un proyecto de minería de texto que busca una frase entre libros y los ordena por relevancia.
 
