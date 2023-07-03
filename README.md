@@ -75,6 +75,8 @@ En mi caso el firewall de las máquinas virtuales de google cloud solo permite e
     En este ejemplo no es necesario agregar el puerto a la ip de la máquina actual porque se está ejecutando en el puerto 80. Si deseas ejecutar tu servidor en algún otro puerto debes agregar también el puerto, por ejemplo `34.125.61.49:8081`.
 
 **Nota:** Se recomienda ejecutar los servidores de procesamiento en el puerto 80, para que no tengas que poner el puerto en la ejecución de cada máquina, como en la nota del paso 2.
+
+
 **Nota 2:** El mínimo de nodos de procesamiento para que la aplicación funcione correctamente es de 1 nodo. Y el máximo depende de cuantos archivos tengas en la carpeta de archivos que quieras leer. En el ejemplo de la carpeta que se comparte aquí, hay 46 libros, por tanto el máximo es de 46 nodos. Aunque con 3 funciona bastante bien.
 
 
@@ -129,3 +131,27 @@ En pocas palabras, es lo mismo que en la sección anterior, solo que cambias las
 
 
 ¡Listo! ahora ingresa al servidor web desde cualquier navegador e ingresa la frase que quieras buscar, la aplicación te recomendará libros que coincidan con tu búsqueda.
+
+## Demostración
+
+A continuación se muestran algunos vídeos demostrativos de la aplicación. Si quieres ver más capturas, dirigete al apartado de [capturas](capturas/README.md)
+
+Una disculpa por la cálidad del vídeo, pero no encontré otra forma mejor para grabar ambas funcionalidades al mismo tiempo.
+
+### Con 3 nodos
+
+Aquí se muestra el funcionamiento con los 3 nodos recomendados.
+
+![](capturas/3nodos.mp4) 
+
+### Con 2 nodos
+
+En este vídeo se mata un nodo de procesamiento. Y, al momento de hacer una petición, el servidor distribuye el trabajo en los nodos disponibles.
+
+![](capturas/2nodos.mp4) 
+
+### Con 1 nodo
+
+En este, se matan 2 nodos de procesamiento, lo cuál deja a la aplicación con solo un nodo.
+
+![](capturas/1nodo.mp4) 
