@@ -142,16 +142,16 @@ Una disculpa por la cálidad del vídeo, pero no encontré otra forma mejor para
 
 Aquí se muestra el funcionamiento con los 3 nodos recomendados.
 
-![](capturas/3nodos.mp4) 
+![3nodos](capturas/3nodos.mp4) 
 
 ### Con 2 nodos
 
 En este vídeo se mata un nodo de procesamiento. Y, al momento de hacer una petición, el servidor distribuye el trabajo en los nodos disponibles.
 
-![](capturas/2nodos.mp4) 
+![2nodos](capturas/2nodos.mp4) 
 
 ### Con 1 nodo
 
 En este, se matan 2 nodos de procesamiento, lo cuál deja a la aplicación con solo un nodo.
 
-![](capturas/1nodo.mp4) 
+![1nodo](capturas/1nodo.mp4) 
