@@ -1,6 +1,14 @@
-# Mineria-de-texto-sistema-dsitribuido
+# Mineria de Texto con un Sistema Sistribuido
 
-Un proyecto que busca una frase entre libros y los ordena por orden de relevancia
+Un proyecto de minería de texto que busca una frase entre libros y los ordena por relevancia.
+
+Utiliza un algoritmo llamado "frecuencia de término, frecuencia inversa de documento" (tfidf) para ordenar los libros que mejor coincidan con la búsqueda.
+
+La aplicación funciona con un servidor web, que contiene una interfaz web accesible desde cualquier navegador, este servidor se encarga de manejar todas las peticiones que se realizan y distribuye el trabajo entre los nodos de procesamiento que se encuentren disponibles. Estos nodos de procesamiento se encargan de buscar la frase en el rango de libros que le toca y ponderar dichos libros conforme a la coincidencia que tengan con la frase ingresada.
+
+Es un sistema distribuido pues el servidor web y los nodos utilizan comunicación HTTP para operar.
+
+El sistema cuenta con una tolerancia a fallos simple. Es decir, si se muere un nodo de procesamiento (mientras no se esté trabajando una petición), el servidor distribuye el trabajo entre los nodos disponibles. Esto se logra haciendo uso de un servidor de Apache Zookeeper, en donde el nodo padre es el servidor web y los nodos hijos son los nodos de procesamiento. Cada que se realiza una petición, el servidor web checa en el servidor zookeeper cuantos nodos hijos tiene, estos nodos contienen en sus datos la dirección IP de la máquina a la que están relacionados, el servidor distribuye el trabajo en la cantidad de nodos hijos que tiene el servidor y manda el trabajo a las direcciones IP de la máquina correspondiente.
 
 ## Requisitos
 
@@ -142,16 +150,16 @@ Una disculpa por la cálidad del vídeo, pero no encontré otra forma mejor para
 
 Aquí se muestra el funcionamiento con los 3 nodos recomendados.
 
-![3nodos](capturas/3nodos.mp4) 
+https://github.com/SergiMartinezR/Mineria-de-texto-sistema-dsitribuido/assets/82753872/9026709e-2c5f-4bb6-b042-9ad9690479fb
 
 ### Con 2 nodos
 
 En este vídeo se mata un nodo de procesamiento. Y, al momento de hacer una petición, el servidor distribuye el trabajo en los nodos disponibles.
 
-![2nodos](capturas/2nodos.mp4) 
+https://github.com/SergiMartinezR/Mineria-de-texto-sistema-dsitribuido/assets/82753872/e954ad8a-6648-4a3d-8faf-8ba562044c3c
 
 ### Con 1 nodo
 
 En este, se matan 2 nodos de procesamiento, lo cuál deja a la aplicación con solo un nodo.
 
-![1nodo](capturas/1nodo.mp4) 
+https://github.com/SergiMartinezR/Mineria-de-texto-sistema-dsitribuido/assets/82753872/68549c3c-948b-4e5a-b029-1fae26e225a5
